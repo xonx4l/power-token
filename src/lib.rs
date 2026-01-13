@@ -30,7 +30,49 @@ impl PowerTokenizer {
      }
     }
 
-    pub fn train (&mut self, text: &str){
+    pub fn train (&mut self, text: &str, vocab_size: usize){
+        println!("Training started...");
 
+        let mut words: Vec<Vec<u32>> = self.splitter.as_ref().unwrap()
+            .find_iter(text)
+            .map(|m| m.as_str().bytes().map(|b| b as u32).collect())
+            .collect();
+
+        let mut next_token = 256;
+
+        while next_token < vocab_size {
+            let mut counts: HashMap<(u32, u32), u32> = HashMap::new();
+
+            for word on &words {
+                for pair in word.windows(2) {
+                    let key = (pair[0], pair[1]);
+                    *counts.entry(key).or_insert(0) += 1;
+                }
+            }
+
+            if let Some((&best_pair, &count)) = counts.iter().max_by_key(|&(_, c)| c) {
+
+                if next_token % 100 ==0 {
+                    if next_token % 100 == 0 {
+                        println!("Merging {:?} -> {} (Count : {})", best_pair, next_token, count);
+                    }
+
+                    self.merges.insert(best_pair, next_token as u32);
+
+                    let mut new_bytes = self.vocab[&best_pair.0].clone();
+                    new_bytes.extend_from_slice(&self.vocab[&best_pair.1]);
+                    self.vocab.insert(next_token as u32, new_bytes);
+
+                    for word in &mut words {
+                        self.apply_merge_to_word(word, best_pair, next_token as u32);
+                    }
+
+                    next_token += 1;
+                } else {
+                    break;
+                }
+            }
+            println!("Training Complete. Vocab size: {}", self.vocab.len());
+        }
     }
 }
