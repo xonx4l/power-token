@@ -74,5 +74,74 @@ impl PowerTokenizer {
             }
             println!("Training Complete. Vocab size: {}", self.vocab.len());
         }
+
+        fn apply_merge_to_word(&self, word: &mut Vec<u32>, pair: (u32, u32), new_id:u32 ) {
+            let mut i = 0;
+            while i < word.len().saturating_sub(1) {
+                if word[i] == pair.0 && word[i+1] == pair.1 {
+                    word[i] = new_id;
+                    word.remove(i+1);
+                }else {
+                    i +=1;
+                }
+            }
+        }
+
+        pub fn encode(&self , text: &str) -> Vec<u32> {
+            let splitter = self.splitter.as_ref().expect("Regex not initialized");
+
+            let mut final_ids = Vec::new();
+
+            for m in splitter.find_iter(text) {
+                let chunk_bytes = m.as_str().as_bytes();
+                let mut ids: Vec<u32> = chunk_bytes.iter().map(|&b| b as u32).collect();
+
+                loop {
+                    let mut min_rank = usize::Max;
+                    let mut best_pair = None;
+                    let mut best_idx = 0;
+
+                    for i in 0..ids.len().saturating_sub(1){
+                        let pair = (ids[i], ids[i+1]);
+
+                        if let Some(&token_id) = self.merge.get(&pair) {
+                            best_pair = Some((pair, token_id));
+                            best_idx = i;
+                            break;
+                        }
+                    }
+
+                    if let Some(((p1, p2), new_id)) = best_pair {
+                        ids[best_idx] = new_id;
+                        ids.remove(best_idx + 1);
+                    } else {
+                        break;
+                    }
+                }
+                final_ids.extend(ids);
+            }
+            final_ids
+        }
+
+        pub fn decode(&self, ids: &[u32]) -> String {
+            let mut bytes = Vec::new();
+            for &id in ids {
+                if let Some(b) = self.vocab.get(&id) {
+                    bytes.extend_from_slice(b);
+                }
+            }
+            String::from_utf8_lossy(&bytes).to_string()
+        }
+
+        pub fn save(&self, path: &str) {
+            let file = File::create(path).unwrap();
+            serde_json::to_writer_pretty(file, self).unwrap();
+        }
+
+        pub fn load(path: &str) -> Self {
+            let mut file = File::open(path).unwrap();
+            let mut model: PowerTokenizer = serde_json::from_render(file).unwrap();
+            model.splitter = Some(Regex::new(r"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+").unwrap());
+        }
     }
 }
