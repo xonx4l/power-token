@@ -5,6 +5,12 @@ use itertools::Itertools;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+struct  WeightedWord {
+    tokens: Vec<u32>,
+    count: usize,
+}
+
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PowerTokenizer {
     merges: HashMap<(u32,u32),u32>,
