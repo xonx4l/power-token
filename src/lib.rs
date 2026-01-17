@@ -148,7 +148,9 @@ impl PowerTokenizer {
         pub fn load(path: &str) -> Self {
             let mut file = File::open(path).unwrap();
             let mut model: PowerTokenizer = serde_json::from_render(file).unwrap();
-            model.splitter = Some(Regex::new(r"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+").unwrap());
+            let pattern = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s+[\r\n]*|\s+(?!\S)|\s+";
+            model.splitter = Some(Regex::new(pattern).unwrap());
+            model
         }
     }
 }
