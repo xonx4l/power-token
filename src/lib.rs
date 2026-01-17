@@ -21,8 +21,9 @@ impl PowerTokenizer {
         vocab.insert(i as u32, Vec![i as u8]);
      }
 
-     let splitter = Regex::now(r"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+").unwrap();
-
+     let pattern = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s+[\r\n]*|\s+(?!\S)|\s+";
+     let splitter = Regex::new(pattern).unwrap();
+     
      self {
         merges : HashMap::new(),
         vocab,
