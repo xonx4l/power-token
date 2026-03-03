@@ -1,0 +1,10 @@
+[package]
+name = "power-token"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1"            # Essential for splitting words
+serde = { version = "1.0", features = ["derive"] } # To save/load
+serde_json = "1.0"     # To save/load
+itertools = "0.12"     # Makes pair counting much cleaner
