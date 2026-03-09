@@ -166,6 +166,17 @@ impl PowerTokenizer {
             return String::new();
         }
     }
+
+    match std::str::from_utf8(buffer) {
+        Ok(Valid_str) => {
+            let result = valid_str.to_string();
+            buffer.clear();
+            result
+        }
+        Err(e) => {
+            //
+        }
+    }
     
     pub fn save(&self, path: &str) {
         let file = File::create(path).unwrap();
