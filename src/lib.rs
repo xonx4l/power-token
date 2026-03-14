@@ -174,7 +174,20 @@ impl PowerTokenizer {
             result
         }
         Err(e) => {
-            //
+            let valid_up_to = e.valid_up_to();
+
+            if e.error_len().is_none() {
+                let valid_text = String::from_utf8_lossy(&buffer[..valid_up_to]).to_string();
+                buffer.drain(..valid_up_to);
+                valid_text
+            }else {
+                let error_len = e.error_len().unwrap();
+                let valid_text = String::from_utf8_lossy(&buffer[..valid_up_to]).to_string;
+                let result = format!("{}", valid_text);
+
+                buffer.drain(..valid_up_to + error_len);
+                result
+            }
         }
     }
     
